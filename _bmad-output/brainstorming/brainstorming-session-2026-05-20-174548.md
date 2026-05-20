@@ -5,7 +5,7 @@ session_topic: 'Onglet Document viewer sur fiche client JSP : liste de documents
 session_goals: 'Mockups statiques et jouables, liste de fonctionnalités, périmètre MVP, options additionnelles avec estimations de durée; alternatives UX au modèle « un bouton par fichier »; clarifier libs JS existantes; livrables analyste d''affaires; livrables QA (stratégie de test, cas de test, critères de recette, matrices de couverture)'
 selected_approach: 'progressive-flow'
 techniques_used: ['Morphological Analysis', 'Solution Matrix', 'SCAMPER Method', 'Decision Tree Mapping']
-ideas_generated: ['A1-A10 disposition', 'M1-M3 mocks client', 'B1-B12 axe liste', 'secteur assurance-banque', 'axe C viewer', 'demos HTML Desjardins native + CDN']
+ideas_generated: ['A1-A10 disposition', 'M1-M3 mocks client', 'B1-B12 axe liste', 'secteur assurance-banque', 'axe C viewer', 'demos HTML native + CDN']
 context_file: ''
 ---
 
@@ -83,7 +83,7 @@ _Implications : layout master-detail (liste | viewer), navigation inter-document
 - **3 mocks** (M1, M2, M3) pour tests et feedback client
 - **Cible production / MVP :** **liste en haut + viewer en dessous** (layout **M2**) — liste type **B1 table horizontale** ou **B3 pills** à trancher en axe C ; M1/M3 = comparaison / alternatives
 
-**Démos HTML (couleurs Desjardins, Tailwind CSS + Alpine.js) :**
+**Démos HTML (couleurs, Tailwind CSS + Alpine.js) :**
 - `_bmad-output/demos/demo-viewer-native.html` — UI Tailwind/Alpine · 0 lib viewer (iframe/img/embed)
 - `_bmad-output/demos/demo-viewer-libraries.html` — UI Tailwind/Alpine · JPEG (chat) — pas de TIFF
 - `_bmad-output/demos/index.html` — index des deux démos
