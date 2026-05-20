@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Démos — Visionneuse documents</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            dj: { DEFAULT: "#00874e", dark: "#003e2e", light: "#f0f7f4", border: "#c5ddd2" },
+          },
+        },
+      },
+    };
+  </script>
+</head>
+<body class="min-h-full bg-dj-light text-gray-800 font-sans antialiased p-8 max-w-3xl">
+  <h1 class="text-2xl font-bold text-dj-dark mb-2">Comparer les deux approches viewer</h1>
+  <p class="text-sm text-gray-600 mb-4">
+    Même UI (pills) · 4 contrats PDF (yacht, Winnebago, jet ski, Ski-Doo) + 4 chats · <strong>seul le rendu PDF change</strong>.
+  </p>
+
+  <pre class="text-xs bg-white border border-dj-border rounded p-3 mb-6">cd _bmad-output/demos
+python3 generate-samples.py
+python -m http.server 8765</pre>
+
+  <div class="grid sm:grid-cols-2 gap-4 mb-6">
+    <a
+      href="demo-viewer-native.html"
+      class="block p-5 bg-white border-2 border-amber-500 rounded-xl hover:shadow-md transition-shadow"
+    >
+      <span class="text-xs font-bold uppercase text-amber-700 tracking-wide">Démo A — Natif</span>
+      <p class="font-semibold text-dj-dark mt-2 mb-2">Look & feel navigateur</p>
+      <ul class="text-xs text-gray-600 space-y-1 list-disc list-inside">
+        <li>PDF : <code class="text-[0.7rem]">&lt;iframe&gt;</code> (plugin / viewer Chrome, Firefox…)</li>
+        <li>JPEG : <code class="text-[0.7rem]">&lt;img&gt;</code></li>
+        <li>Pas de PDF.js · barre d’outils du navigateur</li>
+      </ul>
+    </a>
+    <a
+      href="demo-viewer-libraries.html"
+      class="block p-5 bg-white border-2 border-dj rounded-xl hover:shadow-md transition-shadow"
+    >
+      <span class="text-xs font-bold uppercase text-dj tracking-wide">Démo B — Librairies</span>
+      <p class="font-semibold text-dj-dark mt-2 mb-2">Look & feel applicatif</p>
+      <ul class="text-xs text-gray-600 space-y-1 list-disc list-inside">
+        <li>PDF : <strong>PDF.js</strong> → canvas dans la page</li>
+        <li>JPEG : <code class="text-[0.7rem]">&lt;img&gt;</code> (identique)</li>
+        <li>Zoom / pages intégrés à l’UI Desjardins</li>
+      </ul>
+    </a>
+  </div>
+
+  <p class="text-xs text-gray-500">
+    Contrats : Winnebago, jet ski, Ski-Doo + photo chat. Ouvrez les deux démos côte à côte sur un PDF.
+  </p>
+</body>
+</html>

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full" x-data="viewer()" x-init="init()" @keydown.window="onKey($event)">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Démo B — Viewer librairies (PDF.js)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            dj: { DEFAULT: "#00874e", dark: "#003e2e", light: "#f0f7f4", border: "#c5ddd2" },
+          },
+        },
+      },
+    };
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
+</head>
+<body class="min-h-full bg-dj-light text-gray-800 font-sans antialiased">
+  <header class="bg-dj-dark text-white px-5 py-2.5 flex flex-wrap items-center justify-between gap-2">
+    <span class="font-bold tracking-wide">Desjardins — Démo B</span>
+    <div class="flex items-center gap-2">
+      <span class="bg-dj text-xs font-bold px-2 py-0.5 rounded ring-1 ring-white/30">PDF.js</span>
+      <a href="demo-viewer-native.html" class="text-xs text-emerald-200 underline hover:text-white">→ Démo A (natif)</a>
+    </div>
+  </header>
+
+  <div class="bg-emerald-50 border-b border-dj-border px-5 py-2 text-xs text-dj-dark">
+    <strong>PDF :</strong> rendu par <strong>PDF.js</strong> (canvas dans la page, zoom/pages dans l’UI Desjardins).
+    <strong class="ml-2">JPEG :</strong> <code>&lt;img&gt;</code> — identique en démo A.
+  </div>
+
+  <div class="bg-white border-b border-dj-border px-5 py-2">
+    <h2 class="text-base font-semibold text-dj-dark m-0">Fiche client — Jean Tremblay (123456)</h2>
+  </div>
+
+  <nav class="bg-white border-b-2 border-dj-border flex px-4 gap-1">
+    <button type="button" class="px-4 py-3 text-sm text-gray-500">Général</button>
+    <button type="button" class="px-4 py-3 text-sm text-gray-500">Produits</button>
+    <button type="button" class="px-4 py-3 text-sm font-semibold text-dj-dark border-b-[3px] border-dj -mb-0.5">
+      Document viewer
+    </button>
+  </nav>
+
+  <main class="p-5 pb-8 max-w-6xl mx-auto">
+    <div class="bg-white border border-dj-border rounded-t-lg px-3 py-3">
+      <div class="flex items-center justify-between gap-2 mb-2">
+        <h3 class="text-sm font-semibold text-dj-dark">Documents</h3>
+        <span class="text-xs font-bold text-dj shrink-0" x-text="(selected + 1) + ' / ' + docs.length"></span>
+      </div>
+      <div class="flex flex-wrap gap-2" role="tablist" aria-label="Documents du dossier">
+        <template x-for="(doc, i) in docs" :key="doc.id">
+          <button
+            type="button"
+            role="tab"
+            :aria-selected="selected === i"
+            @click="select(i)"
+            class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border-2 transition-all shadow-sm"
+            :class="selected === i
+              ? 'bg-dj border-dj text-white shadow-md'
+              : 'bg-white border-dj-border text-dj-dark hover:border-dj hover:bg-dj-light'"
+          >
+            <span
+              class="text-[0.65rem] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full"
+              :class="selected === i ? 'bg-white/25 text-white' : 'bg-dj-light text-dj-dark'"
+              x-text="doc.type"
+            ></span>
+            <span class="max-w-[200px] truncate" x-text="doc.pillLabel || doc.name"></span>
+          </button>
+        </template>
+      </div>
+    </div>
+
+    <div class="border border-t-0 border-dj-border rounded-b-lg overflow-hidden bg-neutral-800">
+      <div class="bg-dj-dark text-white text-xs px-3 py-1.5 flex justify-between gap-2">
+        <span x-text="currentLabel"></span>
+        <span class="text-emerald-200 shrink-0" x-text="viewerMode"></span>
+      </div>
+
+      <div
+        x-show="isPdf && !loading && !error"
+        x-cloak
+        class="flex flex-wrap gap-1.5 px-3 py-2 bg-dj-light border-b border-dj-border"
+      >
+        <button type="button" @click="pdfPrev()" :disabled="pdfUiPage <= 1" class="bg-dj text-white text-xs px-2.5 py-1 rounded disabled:opacity-40">Page −</button>
+        <button type="button" @click="pdfNext()" :disabled="!pdfReady || pdfUiPage >= pdfUiNumPages" class="bg-dj text-white text-xs px-2.5 py-1 rounded disabled:opacity-40">Page +</button>
+        <button type="button" @click="pdfZoom(-0.2)" class="bg-dj text-white text-xs px-2.5 py-1 rounded">Zoom −</button>
+        <button type="button" @click="pdfZoom(0.2)" class="bg-dj text-white text-xs px-2.5 py-1 rounded">Zoom +</button>
+        <span class="text-xs text-dj-dark self-center ml-1" x-text="pdfPageInfo"></span>
+      </div>
+
+      <div class="min-h-[400px] flex items-center justify-center p-4 bg-neutral-900 relative">
+        <p x-show="loading" class="text-gray-300 text-sm">Chargement…</p>
+        <p x-show="error" x-cloak class="text-red-300 text-sm text-center max-w-md px-4" x-text="error"></p>
+        <div x-ref="viewerHost" class="w-full flex justify-center overflow-auto max-h-[400px]" x-show="!loading && !error"></div>
+      </div>
+    </div>
+
+    <p class="mt-4 text-xs bg-white border-l-4 border-dj pl-3 py-2 rounded-r">
+      Comparez avec <a href="demo-viewer-native.html" class="text-dj font-semibold underline">Démo A</a> (même pills, PDF en iframe navigateur).
+      <a href="index.html" class="text-dj font-medium ml-2">Index</a>
+    </p>
+  </main>
+
+  <style>[x-cloak] { display: none !important; }</style>
+  <script src="demo-shared-docs.js"></script>
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+    const pdfEngine = { doc: null, page: 1, scale: 1.15 };
+
+    function viewer() {
+      return {
+        docs: window.DEMO_DOCS,
+        selected: 0,
+        loading: false,
+        error: null,
+        pdfReady: false,
+        pdfUiPage: 1,
+        pdfUiNumPages: 0,
+        pdfUiScalePct: 115,
+
+        get current() {
+          return this.docs[this.selected];
+        },
+        get currentLabel() {
+          const d = this.current;
+          return d ? `${d.name} — ${d.type} · ${d.category}` : "—";
+        },
+        get isPdf() {
+          return this.current?.render === "pdf";
+        },
+        get pdfPageInfo() {
+          if (!this.pdfReady) return "—";
+          return `Page ${this.pdfUiPage} / ${this.pdfUiNumPages} · ${this.pdfUiScalePct}%`;
+        },
+        get viewerMode() {
+          const d = this.current;
+          if (!d) return "";
+          return d.render === "pdf" ? "PDF.js / canvas" : "img";
+        },
+
+        resetPdf() {
+          pdfEngine.doc = null;
+          pdfEngine.page = 1;
+          this.pdfReady = false;
+          this.pdfUiPage = 1;
+          this.pdfUiNumPages = 0;
+        },
+
+        init() {
+          this.$nextTick(() => this.loadCurrent());
+        },
+
+        select(i) {
+          this.selected = i;
+          this.loadCurrent();
+        },
+
+        onKey(e) {
+          if (e.key === "ArrowRight" && this.selected < this.docs.length - 1) {
+            e.preventDefault();
+            this.select(this.selected + 1);
+          }
+          if (e.key === "ArrowLeft" && this.selected > 0) {
+            e.preventDefault();
+            this.select(this.selected - 1);
+          }
+        },
+
+        clearHost() {
+          const h = this.$refs.viewerHost;
+          if (h) h.innerHTML = "";
+        },
+
+        async loadCurrent() {
+          const doc = this.current;
+          if (!doc) return;
+          this.error = null;
+          this.loading = true;
+          this.resetPdf();
+          this.clearHost();
+          try {
+            if (doc.render === "pdf") await this.renderPdf(doc.url);
+            else await this.renderImage(doc);
+          } catch (err) {
+            console.error(err);
+            this.error = err.message || String(err);
+          } finally {
+            this.loading = false;
+          }
+        },
+
+        async renderPdf(url) {
+          pdfEngine.doc = await pdfjsLib.getDocument({ url }).promise;
+          pdfEngine.page = 1;
+          this.pdfReady = true;
+          this.pdfUiPage = 1;
+          this.pdfUiNumPages = pdfEngine.doc.numPages;
+          this.pdfUiScalePct = Math.round(pdfEngine.scale * 100);
+          await this.paintPdf();
+        },
+
+        async paintPdf() {
+          const doc = pdfEngine.doc;
+          if (!doc) return;
+          const page = await doc.getPage(pdfEngine.page);
+          const vp = page.getViewport({ scale: pdfEngine.scale });
+          this.clearHost();
+          const canvas = document.createElement("canvas");
+          canvas.className = "shadow-lg max-w-full";
+          canvas.width = vp.width;
+          canvas.height = vp.height;
+          this.$refs.viewerHost.appendChild(canvas);
+          await page.render({ canvasContext: canvas.getContext("2d"), viewport: vp }).promise;
+        },
+
+        async pdfPrev() {
+          if (pdfEngine.page > 1) {
+            pdfEngine.page--;
+            this.pdfUiPage = pdfEngine.page;
+            await this.paintPdf();
+          }
+        },
+
+        async pdfNext() {
+          if (pdfEngine.doc && pdfEngine.page < pdfEngine.doc.numPages) {
+            pdfEngine.page++;
+            this.pdfUiPage = pdfEngine.page;
+            await this.paintPdf();
+          }
+        },
+
+        async pdfZoom(d) {
+          pdfEngine.scale = Math.min(2.5, Math.max(0.7, pdfEngine.scale + d));
+          this.pdfUiScalePct = Math.round(pdfEngine.scale * 100);
+          await this.paintPdf();
+        },
+
+        async renderImage(doc) {
+          this.clearHost();
+          const img = document.createElement("img");
+          img.src = doc.url;
+          img.alt = "Chat mignon";
+          img.className = "max-w-full max-h-[400px] object-contain rounded-lg shadow-lg ring-2 ring-dj/50";
+          this.$refs.viewerHost.appendChild(img);
+        },
+      };
+    }
+  </script>
+</body>
+</html>

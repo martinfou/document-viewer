@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full" x-data="nativeViewer()" @keydown.window="onKey($event)">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <title>Démo A — Viewer natif (iframe)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            dj: { DEFAULT: "#00874e", dark: "#003e2e", light: "#f0f7f4", border: "#c5ddd2" },
+          },
+        },
+      },
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
+  <style>[x-cloak] { display: none !important; }</style>
+</head>
+<body class="min-h-full bg-dj-light text-gray-800 font-sans antialiased">
+  <header class="bg-dj-dark text-white px-5 py-2.5 flex flex-wrap items-center justify-between gap-2">
+    <span class="font-bold tracking-wide">Desjardins — Démo A</span>
+    <div class="flex items-center gap-2">
+      <span class="bg-amber-500 text-amber-950 text-xs font-bold px-2 py-0.5 rounded">Viewer natif · iframe</span>
+      <a href="demo-viewer-libraries.html" class="text-xs text-emerald-200 underline hover:text-white">→ Démo B (PDF.js)</a>
+    </div>
+  </header>
+
+  <div class="bg-amber-50 border-b border-amber-200 px-5 py-2 text-xs text-amber-950">
+    <strong>PDF :</strong> rendu par le <em>navigateur</em> dans une <code>iframe</code> (viewer PDF intégré Chrome/Firefox, pas PDF.js).
+    <strong class="ml-2">JPEG :</strong> balise <code>&lt;img&gt;</code> — identique en démo B.
+  </div>
+
+  <div class="bg-white border-b border-dj-border px-5 py-2">
+    <h2 class="text-base font-semibold text-dj-dark m-0">Fiche client — Jean Tremblay (123456)</h2>
+  </div>
+
+  <nav class="bg-white border-b-2 border-dj-border flex px-4 gap-1">
+    <button type="button" class="px-4 py-3 text-sm text-gray-500">Général</button>
+    <button type="button" class="px-4 py-3 text-sm font-semibold text-dj-dark border-b-[3px] border-dj -mb-0.5">Document viewer</button>
+  </nav>
+
+  <main class="p-5 pb-8 max-w-6xl mx-auto">
+    <div class="bg-white border border-dj-border rounded-t-lg px-3 py-3">
+      <div class="flex items-center justify-between gap-2 mb-2">
+        <h3 class="text-sm font-semibold text-dj-dark">Documents</h3>
+        <span class="text-xs font-bold text-dj" x-text="(selected + 1) + ' / ' + docs.length"></span>
+      </div>
+      <div class="flex flex-wrap gap-2" role="tablist">
+        <template x-for="(doc, i) in docs" :key="doc.id">
+          <button
+            type="button"
+            @click="select(i)"
+            class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border-2 transition-all"
+            :class="selected === i ? 'bg-dj border-dj text-white' : 'bg-white border-dj-border text-dj-dark hover:border-dj hover:bg-dj-light'"
+          >
+            <span class="text-[0.65rem] font-bold uppercase px-1.5 py-0.5 rounded-full" :class="selected === i ? 'bg-white/25' : 'bg-dj-light text-dj-dark'" x-text="doc.type"></span>
+            <span x-text="doc.pillLabel || doc.name"></span>
+          </button>
+        </template>
+      </div>
+    </div>
+
+    <div class="border border-t-0 border-dj-border rounded-b-lg overflow-hidden bg-neutral-800">
+      <div class="bg-dj-dark text-white text-xs px-3 py-1.5 flex justify-between gap-2">
+        <span x-text="currentLabel"></span>
+        <span class="text-amber-200 shrink-0" x-text="viewerMode"></span>
+      </div>
+
+      <div class="min-h-[400px] flex flex-col bg-neutral-100">
+        <!-- Alpine x-if : un seul élément racine obligatoire -->
+        <template x-if="current?.render === 'pdf'">
+          <div class="flex flex-col flex-1 w-full min-h-[400px]">
+            <iframe
+              :key="pdfKey"
+              :src="pdfSrc"
+              :title="current.name"
+              class="w-full flex-1 border-0 bg-white"
+              style="min-height: 400px; height: 65vh;"
+            ></iframe>
+          </div>
+        </template>
+        <template x-if="current?.render === 'image'">
+          <div class="flex-1 flex items-center justify-center p-4 bg-neutral-900 min-h-[400px]">
+            <img :src="imageSrc" :alt="current.name" class="max-w-full max-h-[400px] object-contain rounded-lg ring-2 ring-dj/40" />
+          </div>
+        </template>
+      </div>
+    </div>
+    <p class="mt-4 text-xs bg-white border-l-4 border-amber-500 pl-3 py-2 rounded-r">
+      Comparez avec <a href="demo-viewer-libraries.html" class="text-dj font-semibold underline">Démo B</a> (même pills, PDF sur canvas + zoom intégré).
+      <a href="index.html" class="text-dj font-medium ml-2">Index</a>
+    </p>
+  </main>
+
+  <script src="demo-shared-docs.js"></script>
+  <script>
+    function nativeViewer() {
+      return {
+        docs: window.DEMO_DOCS,
+        selected: 0,
+        get current() { return this.docs[this.selected]; },
+        get currentLabel() {
+          const d = this.current;
+          return d ? `${d.name} — ${d.type} · ${d.category}` : "—";
+        },
+        get viewerMode() {
+          const d = this.current;
+          if (!d) return "";
+          return d.render === "pdf" ? "iframe / navigateur" : "img natif";
+        },
+        get pdfSrc() {
+          const d = this.current;
+          if (!d || d.render !== "pdf") return "";
+          try {
+            return new URL(d.url, window.location.href).href;
+          } catch {
+            return d.url;
+          }
+        },
+        get pdfKey() {
+          return `${this.selected}-${this.pdfSrc}`;
+        },
+        get imageSrc() {
+          const d = this.current;
+          if (!d || d.render !== "image") return "";
+          try {
+            return new URL(d.url, window.location.href).href;
+          } catch {
+            return d.url;
+          }
+        },
+        select(i) { this.selected = i; },
+        onKey(e) {
+          if (e.key === "ArrowRight" && this.selected < this.docs.length - 1) {
+            e.preventDefault();
+            this.selected++;
+          }
+          if (e.key === "ArrowLeft" && this.selected > 0) {
+            e.preventDefault();
+            this.selected--;
+          }
+        },
+      };
+    }
+  </script>
+</body>
+</html>
