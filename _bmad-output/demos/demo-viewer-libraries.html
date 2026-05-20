@@ -222,6 +222,13 @@
           if (h) h.innerHTML = "";
         },
 
+        async waitForViewerLayout() {
+          for (let i = 0; i < 10; i++) {
+            await new Promise((r) => requestAnimationFrame(r));
+            if ((this.$refs.viewerHost?.clientWidth || 0) > 80) return;
+          }
+        },
+
         async loadCurrent() {
           const doc = this.current;
           if (!doc) return;
@@ -237,6 +244,11 @@
             this.error = err.message || String(err);
           } finally {
             this.loading = false;
+            if (doc.render === "pdf" && pdfEngine.doc && !this.error) {
+              await this.$nextTick();
+              await this.waitForViewerLayout();
+              await this.pdfFitWidth();
+            }
           }
         },
 
@@ -257,16 +269,12 @@
           this.pdfReady = true;
           this.pdfUiPage = 1;
           this.pdfUiNumPages = pdfEngine.doc.numPages;
-          await this.$nextTick();
-          await this.pdfFitWidth();
         },
 
         hostSize() {
           const host = this.$refs.viewerHost;
-          return {
-            w: host?.clientWidth || 640,
-            h: host?.clientHeight || 400,
-          };
+          const w = host?.clientWidth || 0;
+          return { w: w > 0 ? w : 640, h: host?.clientHeight || 400 };
         },
 
         async pageAtScale1() {
@@ -320,7 +328,7 @@
           if (pdfEngine.page > 1) {
             pdfEngine.page--;
             this.pdfUiPage = pdfEngine.page;
-            await this.paintPdf();
+            await this.pdfFitWidth();
           }
         },
 
@@ -328,7 +336,7 @@
           if (pdfEngine.doc && pdfEngine.page < pdfEngine.doc.numPages) {
             pdfEngine.page++;
             this.pdfUiPage = pdfEngine.page;
-            await this.paintPdf();
+            await this.pdfFitWidth();
           }
         },
 

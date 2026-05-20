@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full" x-data="layoutViewer()" x-init="initWithThumbs()" @keydown.window="onKey($event)">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Démo 3 — M3 Vignettes</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { colors: { dj: { DEFAULT: "#00874e", dark: "#003e2e", light: "#f0f7f4", border: "#c5ddd2" } } } } };
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
+  <style>
+    [x-cloak] { display: none !important; }
+    .thumb-rail {
+      overflow-y: scroll;
+      overflow-x: hidden;
+      scrollbar-gutter: stable;
+      scrollbar-width: thin;
+      scrollbar-color: #00874e #e8f3ed;
+    }
+    .thumb-rail::-webkit-scrollbar { width: 10px; }
+    .thumb-rail::-webkit-scrollbar-track { background: #f0f7f4; border-radius: 4px; }
+    .thumb-rail::-webkit-scrollbar-thumb { background: #00874e; border-radius: 4px; border: 2px solid #f0f7f4; }
+  </style>
+</head>
+<body class="min-h-full bg-dj-light text-gray-800 font-sans antialiased">
+  <header class="bg-dj-dark text-white px-5 py-2.5 flex flex-wrap items-center justify-between gap-3">
+    <a href="index.html" class="font-bold tracking-wide text-white hover:text-emerald-100 shrink-0">← Index</a>
+    <nav class="flex flex-wrap items-center gap-1 text-xs" aria-label="Layouts UX">
+      <a href="demo-layout-1.html" class="px-2.5 py-1 rounded text-emerald-100 hover:bg-white/15">Démo 1</a>
+      <a href="demo-layout-2.html" class="px-2.5 py-1 rounded text-emerald-100 hover:bg-white/15">Démo 2</a>
+      <a href="demo-layout-3.html" class="px-2.5 py-1 rounded font-semibold bg-violet-600 text-white">Démo 3</a>
+    </nav>
+    <span class="text-[0.65rem] text-emerald-200 shrink-0 hidden sm:inline">M3 · vignettes</span>
+  </header>
+
+  <div class="bg-violet-50 border-b border-violet-200 px-5 py-2 text-xs text-violet-950">
+    <strong>M3 Vignettes</strong> — aperçu page 1 des PDF (fichiers <code>samples/thumbs/</code> ou PDF.js). Option visuelle — <strong>hors MVP</strong>.
+  </div>
+
+  <div class="bg-white border-b border-dj-border px-5 py-2">
+    <h2 class="text-base font-semibold text-dj-dark m-0">Fiche client — Jean Tremblay (123456)</h2>
+  </div>
+  <nav class="bg-white border-b-2 border-dj-border flex px-4 gap-1">
+    <button type="button" class="px-4 py-3 text-sm text-gray-500">Général</button>
+    <button type="button" class="px-4 py-3 text-sm font-semibold text-dj-dark border-b-[3px] border-dj -mb-0.5">Document viewer</button>
+  </nav>
+
+  <main class="p-4 pb-8 max-w-7xl mx-auto">
+    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+      <h3 class="text-sm font-semibold text-dj-dark">Documents</h3>
+      <div class="flex items-center gap-2">
+        <button type="button" @click="docPrev()" :disabled="selected <= 0" class="bg-dj text-white text-xs px-2.5 py-1 rounded disabled:opacity-40">← Doc.</button>
+        <span class="text-xs font-bold text-dj" x-text="(selected + 1) + ' / ' + docs.length"></span>
+        <button type="button" @click="docNext()" :disabled="selected >= docs.length - 1" class="bg-dj text-white text-xs px-2.5 py-1 rounded disabled:opacity-40">Doc. →</button>
+      </div>
+    </div>
+
+    <div
+      class="bg-white border border-dj-border rounded-lg overflow-hidden flex flex-col lg:flex-row h-[min(70vh,580px)] max-h-[min(70vh,580px)]"
+    >
+      <aside
+        class="w-full lg:w-48 shrink-0 border-b lg:border-b-0 lg:border-r border-dj-border bg-white flex flex-col min-h-0 max-h-[38vh] lg:max-h-none lg:h-full"
+      >
+        <p class="text-[0.65rem] font-semibold text-dj-dark px-2 py-1.5 border-b border-dj-border bg-dj-light shrink-0">
+          Vignettes · <span x-text="docs.length"></span> docs
+          <span x-show="thumbsLoading" class="text-dj font-normal"> — génération…</span>
+        </p>
+        <div class="thumb-rail flex-1 min-h-0 p-2">
+        <div class="grid grid-cols-2 lg:grid-cols-1 gap-2 pb-1">
+          <template x-for="(doc, i) in docs" :key="doc.id">
+            <button
+              type="button"
+              @click="select(i)"
+              class="text-left rounded-lg border-2 p-2 transition-all"
+              :class="selected === i ? 'border-dj bg-dj-light ring-2 ring-dj/30' : 'border-dj-border hover:border-dj'"
+            >
+              <div class="aspect-[4/3] rounded-md overflow-hidden bg-neutral-100 mb-1.5 flex items-center justify-center relative">
+                <img
+                  x-show="thumbSrc(doc)"
+                  :src="thumbSrc(doc)"
+                  :alt="doc.pillLabel"
+                  class="w-full h-full object-cover object-top bg-white"
+                  loading="lazy"
+                />
+                <div
+                  x-show="doc.render === 'pdf' && !thumbSrc(doc) && thumbsLoading"
+                  class="absolute inset-0 flex items-center justify-center bg-dj-light text-dj text-[0.65rem]"
+                >…</div>
+                <div
+                  x-show="doc.render === 'pdf' && !thumbSrc(doc) && !thumbsLoading"
+                  class="w-full h-full flex flex-col items-center justify-center bg-red-50 text-red-800"
+                >
+                  <span class="text-lg font-bold">PDF</span>
+                </div>
+              </div>
+              <p class="text-[0.65rem] font-bold text-dj-dark truncate" x-text="doc.pillLabel || doc.name"></p>
+              <p class="text-[0.6rem] text-gray-500" x-text="doc.type + ' · ' + doc.category"></p>
+            </button>
+          </template>
+        </div>
+        </div>
+      </aside>
+
+      <section class="flex-1 flex flex-col min-w-0 min-h-0 bg-neutral-800">
+        <div class="bg-dj-dark text-white text-xs px-3 py-1.5 flex justify-between gap-2">
+          <span x-text="currentLabel"></span>
+          <span class="text-emerald-200 shrink-0" x-text="viewerMode"></span>
+        </div>
+        <p x-show="fileProtocolWarning" x-cloak class="text-xs bg-red-900 text-red-100 px-3 py-2">Serveur HTTP requis.</p>
+        <div x-show="isPdf && !loading && !error" x-cloak class="flex flex-wrap gap-1.5 px-3 py-2 bg-dj-light border-b border-dj-border">
+          <button type="button" @click="pdfPrev()" :disabled="pdfUiPage <= 1" class="bg-dj text-white text-xs px-2 py-1 rounded disabled:opacity-40">Page −</button>
+          <button type="button" @click="pdfNext()" :disabled="!pdfReady || pdfUiPage >= pdfUiNumPages" class="bg-dj text-white text-xs px-2 py-1 rounded disabled:opacity-40">Page +</button>
+          <button type="button" @click="pdfZoom(-0.2)" class="bg-dj text-white text-xs px-2 py-1 rounded">Zoom −</button>
+          <button type="button" @click="pdfZoom(0.2)" class="bg-dj text-white text-xs px-2 py-1 rounded">Zoom +</button>
+          <button type="button" @click="pdfFitWidth()" :disabled="!pdfReady" class="bg-white border border-dj text-dj-dark text-xs px-2 py-1 rounded disabled:opacity-40">Largeur</button>
+          <button type="button" @click="pdfFitHeight()" :disabled="!pdfReady" class="bg-white border border-dj text-dj-dark text-xs px-2 py-1 rounded disabled:opacity-40">Hauteur</button>
+          <span class="text-xs text-dj-dark self-center" x-text="pdfPageInfo"></span>
+        </div>
+        <div class="flex-1 flex items-center justify-center p-3 relative min-h-0 overflow-hidden">
+          <p x-show="loading" class="text-gray-300 text-sm">Chargement…</p>
+          <p x-show="error" x-cloak class="text-red-300 text-sm text-center px-4" x-text="error"></p>
+          <div
+            x-ref="viewerHost"
+            class="w-full h-full flex justify-center items-start overflow-auto py-1"
+            x-show="!loading && !error"
+          ></div>
+        </div>
+      </section>
+    </div>
+  </main>
+  <script src="demo-shared-docs.js"></script>
+  <script src="demo-layout-engine.js"></script>
+</body>
+</html>

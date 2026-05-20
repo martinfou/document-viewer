@@ -17,53 +17,63 @@
     };
   </script>
 </head>
-<body class="min-h-full bg-dj-light text-gray-800 font-sans antialiased p-8 max-w-3xl">
-  <h1 class="text-2xl font-bold text-dj-dark mb-2">Comparer les deux approches viewer</h1>
+<body class="min-h-full bg-dj-light text-gray-800 font-sans antialiased p-8 max-w-4xl">
+  <h1 class="text-2xl font-bold text-dj-dark mb-2">Visionneuse documents — démos</h1>
   <p class="text-sm text-gray-600 mb-4">
-    Même UI (pills) · 4 contrats PDF (yacht, Winnebago, jet ski, Ski-Doo) + 4 chats · <strong>seul le rendu PDF change</strong>.
+    Fiche client JSP · onglet Document viewer · PDF + JPEG · couleurs Desjardins.
   </p>
 
-  <p class="text-sm bg-emerald-50 border border-dj-border rounded-lg px-4 py-3 mb-4">
+  <p class="text-sm bg-emerald-50 border border-dj-border rounded-lg px-4 py-3 mb-8">
     <strong class="text-dj-dark">En ligne :</strong>
     <a href="https://martinfou.github.io/document-viewer/" class="text-dj font-semibold underline break-all">martinfou.github.io/document-viewer</a>
-    (GitHub Pages — HTTPS, PDF.js OK)
+    (GitHub Pages — HTTPS)
   </p>
 
-  <pre class="text-xs bg-white border border-dj-border rounded p-3 mb-6"># Local uniquement
-cd _bmad-output/demos
-python3 generate-samples.py
-python3 serve-demos.py
-# http://localhost:8765/ (pas file://)</pre>
-
-  <div class="grid sm:grid-cols-2 gap-4 mb-6">
-    <a
-      href="demo-viewer-native.html"
-      class="block p-5 bg-white border-2 border-amber-500 rounded-xl hover:shadow-md transition-shadow"
-    >
+  <h2 class="text-lg font-semibold text-dj-dark mb-2">Moteur de rendu (PDF)</h2>
+  <p class="text-xs text-gray-600 mb-3">Même liste de documents · seul le moteur PDF change.</p>
+  <div class="grid sm:grid-cols-2 gap-4 mb-10">
+    <a href="demo-viewer-native.html" class="block p-5 bg-white border-2 border-amber-500 rounded-xl hover:shadow-md transition-shadow">
       <span class="text-xs font-bold uppercase text-amber-700 tracking-wide">Démo A — Natif</span>
-      <p class="font-semibold text-dj-dark mt-2 mb-2">Look & feel navigateur</p>
+      <p class="font-semibold text-dj-dark mt-2 mb-2">Viewer navigateur</p>
       <ul class="text-xs text-gray-600 space-y-1 list-disc list-inside">
-        <li>PDF : <code class="text-[0.7rem]">&lt;iframe&gt;</code> (plugin / viewer Chrome, Firefox…)</li>
-        <li>JPEG : <code class="text-[0.7rem]">&lt;img&gt;</code></li>
-        <li>Pas de PDF.js · barre d’outils du navigateur</li>
+        <li>PDF : <code class="text-[0.7rem]">&lt;iframe&gt;</code></li>
+        <li>Layout : bandeau pills (M2)</li>
       </ul>
     </a>
-    <a
-      href="demo-viewer-libraries.html"
-      class="block p-5 bg-white border-2 border-dj rounded-xl hover:shadow-md transition-shadow"
-    >
-      <span class="text-xs font-bold uppercase text-dj tracking-wide">Démo B — Librairies</span>
-      <p class="font-semibold text-dj-dark mt-2 mb-2">Look & feel applicatif</p>
+    <a href="demo-viewer-libraries.html" class="block p-5 bg-white border-2 border-dj rounded-xl hover:shadow-md transition-shadow">
+      <span class="text-xs font-bold uppercase text-dj tracking-wide">Démo B — PDF.js</span>
+      <p class="font-semibold text-dj-dark mt-2 mb-2">Viewer applicatif</p>
       <ul class="text-xs text-gray-600 space-y-1 list-disc list-inside">
-        <li>PDF : <strong>PDF.js</strong> → canvas dans la page</li>
-        <li>JPEG : <code class="text-[0.7rem]">&lt;img&gt;</code> (identique)</li>
-        <li>Zoom / pages intégrés à l’UI Desjardins</li>
+        <li>PDF : <strong>PDF.js</strong> (canvas)</li>
+        <li>Layout : bandeau pills (M2)</li>
       </ul>
     </a>
   </div>
 
+  <h2 class="text-lg font-semibold text-dj-dark mb-2">Layouts UX (brainstorm M1–M3)</h2>
+  <p class="text-xs text-gray-600 mb-3">
+    Même documents · <strong>PDF.js</strong> partout · seule la disposition liste / viewer change.
+    Navigation <strong>Démo 1 → 2 → 3</strong> dans la barre verte de chaque maquette.
+  </p>
+  <div class="grid sm:grid-cols-3 gap-4 mb-8">
+    <a href="demo-layout-1.html" class="block p-4 bg-white border-2 border-dj rounded-xl hover:shadow-md transition-shadow ring-2 ring-dj/20">
+      <span class="text-xs font-bold uppercase text-dj">Démo 1 · MVP</span>
+      <p class="font-semibold text-dj-dark mt-2 mb-1">Bandeau pills</p>
+      <p class="text-xs text-gray-600">Liste au-dessus du viewer — <strong>cible production</strong>.</p>
+    </a>
+    <a href="demo-layout-2.html" class="block p-4 bg-white border-2 border-slate-400 rounded-xl hover:shadow-md transition-shadow">
+      <span class="text-xs font-bold uppercase text-slate-600">Démo 2 · M1</span>
+      <p class="font-semibold text-dj-dark mt-2 mb-1">Liste gauche (table)</p>
+      <p class="text-xs text-gray-600">Nom, type, catégorie, date — référence secteur assurance.</p>
+    </a>
+    <a href="demo-layout-3.html" class="block p-4 bg-white border-2 border-violet-400 rounded-xl hover:shadow-md transition-shadow">
+      <span class="text-xs font-bold uppercase text-violet-700">Démo 3 · M3</span>
+      <p class="font-semibold text-dj-dark mt-2 mb-1">Vignettes gauche</p>
+      <p class="text-xs text-gray-600">Aperçu JPEG + placeholder PDF — option hors MVP.</p>
+    </a>
+  </div>
   <p class="text-xs text-gray-500">
-    Contrats : Winnebago, jet ski, Ski-Doo + photo chat. Ouvrez les deux démos côte à côte sur un PDF.
+    4 contrats PDF + 4 photos chat · comparez layouts puis A vs B sur le même PDF.
   </p>
 </body>
 </html>

@@ -2,10 +2,14 @@
 """Génère les assets locaux : chat JPEG + contrats PDF fictifs (multi-pages)."""
 from __future__ import annotations
 
+import shutil
+import subprocess
 import urllib.request
 from pathlib import Path
 
 SAMPLES = Path(__file__).resolve().parent / "samples"
+THUMBS = SAMPLES / "thumbs"
+THUMB_WIDTH = 200
 
 CAT_PHOTOS: list[tuple[str, str]] = [
     ("photo_chat_1.jpg", "https://cataas.com/cat/cute?width=520&height=400"),
@@ -415,11 +419,48 @@ def download_cats() -> None:
             raise SystemExit(f"Impossible de télécharger {filename}")
 
 
+def generate_pdf_thumbnails() -> None:
+    """Vignettes JPEG de la page 1 (pdftoppm / poppler)."""
+    THUMBS.mkdir(parents=True, exist_ok=True)
+    pdftoppm = shutil.which("pdftoppm")
+    if not pdftoppm:
+        print("Skip thumbs — installez poppler (pdftoppm) ou utilisez PDF.js dans la démo 3")
+        return
+    for filename, _ in CONTRACTS:
+        pdf = SAMPLES / filename
+        if not pdf.is_file():
+            continue
+        out_base = THUMBS / pdf.stem
+        out_jpg = THUMBS / f"{pdf.stem}.jpg"
+        subprocess.run(
+            [
+                pdftoppm,
+                "-jpeg",
+                "-f",
+                "1",
+                "-l",
+                "1",
+                "-scale-to",
+                str(THUMB_WIDTH),
+                "-singlefile",
+                str(pdf),
+                str(out_base),
+            ],
+            check=True,
+            capture_output=True,
+        )
+        if out_jpg.is_file():
+            print(f"OK thumb — {out_jpg.name} ({out_jpg.stat().st_size:,} o)")
+        else:
+            print(f"  attention — vignette manquante pour {filename}")
+
+
 def main() -> None:
     SAMPLES.mkdir(parents=True, exist_ok=True)
     download_cats()
     for filename, pages in CONTRACTS:
         write_contract_pdf(SAMPLES / filename, pages)
+    generate_pdf_thumbnails()
     print("Terminé —", SAMPLES)
 
 

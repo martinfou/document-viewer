@@ -9,6 +9,7 @@ window.DEMO_DOCS = [
     date: "2026-06-15",
     render: "pdf",
     url: "samples/contrat_yacht_megayacht.pdf",
+    thumbUrl: "samples/thumbs/contrat_yacht_megayacht.jpg",
   },
   {
     id: 2,
@@ -19,6 +20,7 @@ window.DEMO_DOCS = [
     date: "2026-01-10",
     render: "pdf",
     url: "samples/contrat_winnebago.pdf",
+    thumbUrl: "samples/thumbs/contrat_winnebago.jpg",
   },
   {
     id: 3,
@@ -29,6 +31,7 @@ window.DEMO_DOCS = [
     date: "2026-06-01",
     render: "pdf",
     url: "samples/contrat_jetski.pdf",
+    thumbUrl: "samples/thumbs/contrat_jetski.jpg",
   },
   {
     id: 4,
@@ -39,6 +42,7 @@ window.DEMO_DOCS = [
     date: "2026-12-15",
     render: "pdf",
     url: "samples/contrat_skidoo.pdf",
+    thumbUrl: "samples/thumbs/contrat_skidoo.jpg",
   },
   {
     id: 5,

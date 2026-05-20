@@ -10,6 +10,12 @@ Visionneuse de documents embarquée (PDF, JPEG) — projet greenfield BMad, dém
 - [Démo A — viewer natif (iframe)](https://martinfou.github.io/document-viewer/demo-viewer-native.html)
 - [Démo B — PDF.js](https://martinfou.github.io/document-viewer/demo-viewer-libraries.html)
 
+**Layouts UX (M1–M3, PDF.js) :**
+
+- [Démo 1 — pills · MVP](https://martinfou.github.io/document-viewer/demo-layout-1.html)
+- [Démo 2 — table à gauche (M1)](https://martinfou.github.io/document-viewer/demo-layout-2.html)
+- [Démo 3 — M3 vignettes](https://martinfou.github.io/document-viewer/demo-layout-3.html)
+
 Les PDF et images sont servis en HTTPS ; pas besoin de `file://` ni de serveur local pour tester en ligne.
 
 ## Développement local

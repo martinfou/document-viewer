@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full" x-data="layoutViewer()" x-init="init()" @keydown.window="onKey($event)">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Démo 1 — Bandeau (pills) · MVP</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { colors: { dj: { DEFAULT: "#00874e", dark: "#003e2e", light: "#f0f7f4", border: "#c5ddd2" } } } } };
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
+  <style>[x-cloak] { display: none !important; }</style>
+</head>
+<body class="min-h-full bg-dj-light text-gray-800 font-sans antialiased">
+  <header class="bg-dj-dark text-white px-5 py-2.5 flex flex-wrap items-center justify-between gap-3">
+    <a href="index.html" class="font-bold tracking-wide text-white hover:text-emerald-100 shrink-0">← Index</a>
+    <nav class="flex flex-wrap items-center gap-1 text-xs" aria-label="Layouts UX">
+      <a href="demo-layout-1.html" class="px-2.5 py-1 rounded font-semibold bg-white text-dj-dark ring-1 ring-dj">Démo 1 · MVP</a>
+      <a href="demo-layout-2.html" class="px-2.5 py-1 rounded text-emerald-100 hover:bg-white/15">Démo 2</a>
+      <a href="demo-layout-3.html" class="px-2.5 py-1 rounded text-emerald-100 hover:bg-white/15">Démo 3</a>
+    </nav>
+    <span class="text-[0.65rem] text-emerald-200 shrink-0 hidden sm:inline">Pills en haut</span>
+  </header>
+
+  <div class="bg-emerald-50 border-b border-dj-border px-5 py-2 text-xs text-dj-dark">
+    <strong>Démo 1 — Bandeau (M2)</strong> — pills au-dessus du viewer. <strong>Cible production / MVP</strong> (même layout que démos A et B).
+  </div>
+
+  <div class="bg-white border-b border-dj-border px-5 py-2">
+    <h2 class="text-base font-semibold text-dj-dark m-0">Fiche client — Jean Tremblay (123456)</h2>
+  </div>
+  <nav class="bg-white border-b-2 border-dj-border flex px-4 gap-1">
+    <button type="button" class="px-4 py-3 text-sm text-gray-500">Général</button>
+    <button type="button" class="px-4 py-3 text-sm font-semibold text-dj-dark border-b-[3px] border-dj -mb-0.5">Document viewer</button>
+  </nav>
+
+  <main class="p-4 pb-8 max-w-6xl mx-auto">
+    <div class="bg-white border border-dj-border rounded-t-lg px-3 py-3">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+        <h3 class="text-sm font-semibold text-dj-dark">Documents</h3>
+        <div class="flex items-center gap-2">
+          <button type="button" @click="docPrev()" :disabled="selected <= 0" class="bg-dj text-white text-xs px-2.5 py-1 rounded disabled:opacity-40">← Doc.</button>
+          <span class="text-xs font-bold text-dj" x-text="(selected + 1) + ' / ' + docs.length"></span>
+          <button type="button" @click="docNext()" :disabled="selected >= docs.length - 1" class="bg-dj text-white text-xs px-2.5 py-1 rounded disabled:opacity-40">Doc. →</button>
+        </div>
+      </div>
+      <div class="flex flex-wrap gap-2" role="tablist">
+        <template x-for="(doc, i) in docs" :key="doc.id">
+          <button
+            type="button"
+            @click="select(i)"
+            class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border-2 transition-all"
+            :class="selected === i ? 'bg-dj border-dj text-white' : 'bg-white border-dj-border text-dj-dark hover:border-dj hover:bg-dj-light'"
+          >
+            <span class="text-[0.65rem] font-bold uppercase px-1.5 py-0.5 rounded-full" :class="selected === i ? 'bg-white/25' : 'bg-dj-light'" x-text="doc.type"></span>
+            <span x-text="doc.pillLabel || doc.name"></span>
+          </button>
+        </template>
+      </div>
+    </div>
+
+    <div class="border border-t-0 border-dj-border rounded-b-lg overflow-hidden bg-neutral-800">
+      <div class="bg-dj-dark text-white text-xs px-3 py-1.5 flex justify-between gap-2">
+        <span x-text="currentLabel"></span>
+        <span class="text-emerald-200 shrink-0" x-text="viewerMode"></span>
+      </div>
+      <p x-show="fileProtocolWarning" x-cloak class="text-xs bg-red-900 text-red-100 px-3 py-2">Serveur HTTP requis.</p>
+      <div x-show="isPdf && !loading && !error" x-cloak class="flex flex-wrap gap-1.5 px-3 py-2 bg-dj-light border-b border-dj-border">
+        <button type="button" @click="pdfPrev()" :disabled="pdfUiPage <= 1" class="bg-dj text-white text-xs px-2 py-1 rounded disabled:opacity-40">Page −</button>
+        <button type="button" @click="pdfNext()" :disabled="!pdfReady || pdfUiPage >= pdfUiNumPages" class="bg-dj text-white text-xs px-2 py-1 rounded disabled:opacity-40">Page +</button>
+        <button type="button" @click="pdfZoom(-0.2)" class="bg-dj text-white text-xs px-2 py-1 rounded">Zoom −</button>
+        <button type="button" @click="pdfZoom(0.2)" class="bg-dj text-white text-xs px-2 py-1 rounded">Zoom +</button>
+        <button type="button" @click="pdfFitWidth()" :disabled="!pdfReady" class="bg-white border border-dj text-dj-dark text-xs px-2 py-1 rounded disabled:opacity-40">Largeur</button>
+        <button type="button" @click="pdfFitHeight()" :disabled="!pdfReady" class="bg-white border border-dj text-dj-dark text-xs px-2 py-1 rounded disabled:opacity-40">Hauteur</button>
+        <span class="text-xs text-dj-dark self-center" x-text="pdfPageInfo"></span>
+      </div>
+      <div class="min-h-[400px] flex items-center justify-center p-4 relative">
+        <p x-show="loading" class="text-gray-300 text-sm">Chargement…</p>
+        <p x-show="error" x-cloak class="text-red-300 text-sm text-center px-4" x-text="error"></p>
+        <div x-ref="viewerHost" class="w-full flex justify-center items-start overflow-auto max-h-[min(70vh,560px)] py-2" x-show="!loading && !error"></div>
+      </div>
+    </div>
+  </main>
+  <script src="demo-shared-docs.js"></script>
+  <script src="demo-layout-engine.js"></script>
+</body>
+</html>
