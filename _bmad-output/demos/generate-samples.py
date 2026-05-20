@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Génère les assets locaux : chat JPEG + contrats PDF fictifs."""
+"""Génère les assets locaux : chat JPEG + contrats PDF fictifs (multi-pages)."""
 from __future__ import annotations
 
 import urllib.request
@@ -7,7 +7,6 @@ from pathlib import Path
 
 SAMPLES = Path(__file__).resolve().parent / "samples"
 
-# 4 chats mignons — URLs différentes pour des images distinctes
 CAT_PHOTOS: list[tuple[str, str]] = [
     ("photo_chat_1.jpg", "https://cataas.com/cat/cute?width=520&height=400"),
     ("photo_chat_2.jpg", "https://cataas.com/cat?tags=kitten,cute&width=520&height=400"),
@@ -20,181 +19,284 @@ CAT_FALLBACK_URLS = [
     "https://cataas.com/cat/cute?type=square&width=520&height=400",
 ]
 
-# Yacht : liste de pages ; autres contrats : une seule page (liste de lignes).
-CONTRACTS: list[tuple[str, list | list[list[tuple[int, str]]]]] = [
+# Each entry: (filename, pages) where pages = list of pages,
+# each page = list of (font_size, text) rows.
+CONTRACTS: list[tuple[str, list[list[tuple[int, str]]]]] = [
     (
-        "contrat_yacht_megayacht.pdf",
+        "contrat_yacht_megayacht.pdf",  # 4 pages
         [
-            [
+            [  # p.1 — identification & parties
                 (18, "CONTRAT DE VENTE — MEGAYACHT"),
                 (14, "MV AURORA PACIFICA"),
                 (11, "Longueur : 92,40 m  |  Pavillon : Cayman Islands  |  Annee : 2019"),
                 (11, "Constructeur : Lurssen Werft  |  Architecte : Espen Oeino"),
+                (11, "Ref. : YPP-2026-8842  |  Date : 15 juin 2026"),
                 (11, ""),
-                (12, "PARTIES"),
+                (12, "1. PARTIES"),
                 (10, "Vendeur : Ocean Prestige Holdings Ltd., George Town, KY1-1104"),
-                (10, "Acheteur : M. Jean Tremblay — Fiche client 123456"),
-                (10, "Courtier : Yacht Prestige Partners S.A., Geneve — ref. YPP-2026-8842"),
+                (10, "Acheteur : M. Jean Tremblay — Fiche client 123456, Montreal QC"),
+                (10, "Courtier : Yacht Prestige Partners S.A., Geneve — agree MYBA"),
                 (10, "Notaire : Me Sophie Beaulieu, Monaco — dossier YACHT-2026-441"),
                 (11, ""),
-                (10, "Page 1 / 3 — suite aux pages suivantes"),
+                (12, "2. DESCRIPTION DU NAVIRE"),
+                (10, "Type : Motor Yacht — acier / aluminium — Feadship 2019"),
+                (10, "Longueur hors tout : 92,40 m  |  Largeur : 14,20 m  |  Tirant d'eau : 3,80 m"),
+                (10, "Propulsion : 2 x MTU 16V 4000 M93L — 5 440 HP total"),
+                (11, ""),
+                (10, "— page 1 / 4 —"),
             ],
-            [
-                (12, "CONDITIONS FINANCIERES"),
+            [  # p.2 — conditions financieres
+                (14, "MV AURORA PACIFICA — Conditions financieres"),
                 (11, ""),
-                (10, "Prix de vente : 148 500 000 USD (cent quarante-huit millions cinq cents mille)"),
-                (10, "Depot a la signature : 14 850 000 USD (10 %) — compte escrow Credit Suisse"),
-                (10, "Versement intermediaire : 44 550 000 USD (30 %) — apres inspection technique"),
-                (10, "Solde a la livraison : 89 100 000 USD (60 %) — livraison Monaco, 15 juin 2026"),
+                (12, "3. PRIX ET MODALITES DE PAIEMENT"),
+                (10, "Prix de vente : 148 500 000 USD"),
+                (10, "  (cent quarante-huit millions cinq cent mille dollars US)"),
                 (11, ""),
-                (12, "ASSURANCES & GARANTIES"),
-                (10, "Garantie constructeur residuelle : 18 mois moteurs et coque"),
-                (10, "Assurance P&I / Coque incluse 12 mois : Club MMI — police YT-2026-0091"),
-                (10, "Franchise collision : 250 000 USD  |  Responsabilite tiers : 50 M USD"),
+                (10, "Echeancier :"),
+                (10, "  - Acompte a la signature : 14 850 000 USD (10 %) — virement SWIFT"),
+                (10, "  - 2e versement apres inspection : 29 700 000 USD (20 %) — J+30"),
+                (10, "  - Solde a la livraison : 103 950 000 USD (70 %) — port de Monaco"),
                 (11, ""),
-                (10, "Page 2 / 3"),
+                (10, "Compte sequestre : Banque Pictet & Cie — IBAN CH93 0076 2011 6238 5295 7"),
+                (10, "Frais de courtage : 5 % — a la charge du Vendeur"),
+                (10, "Droits d'immatriculation : a la charge de l'Acheteur"),
+                (11, ""),
+                (12, "4. INSPECTION TECHNIQUE"),
+                (10, "Lloyd's Register — rapport IT-2026-LR-0441 — etat excellent"),
+                (10, "Moteurs : revises 2025 — 3 210 h (tribord) / 3 180 h (babord)"),
+                (10, "Systemes electroniques : FURUNO NavNet TZtouch3 — mis a jour 2026"),
+                (11, ""),
+                (10, "— page 2 / 4 —"),
             ],
-            [
-                (12, "EQUIPEMENT & LIVRAISON"),
+            [  # p.3 — garanties & assurances
+                (14, "MV AURORA PACIFICA — Garanties et assurances"),
                 (11, ""),
-                (10, "Tender : Williams 505 Jet  |  Helicopter pad certifie (non inclus)"),
-                (10, "Stabilisateurs : Quantum Zero Speed  |  Propulsion : diesel-electric hybrid"),
-                (10, "Interieurs : 6 cabines invites, 1 master, spa, cinema, beach club"),
-                (10, "Electronics : navigation ECDIS, AIS, VSAT Starlink maritime"),
+                (12, "5. GARANTIES"),
+                (10, "Garantie constructeur residuelle : 18 mois a compter de la livraison"),
+                (10, "Garantie moteurs MTU : 12 mois pieces et main d'oeuvre"),
+                (10, "Equipements inclus : 2 tenders Castoldi, 1 Jet-Ski, mobilier complet"),
                 (11, ""),
-                (12, "SIGNATURES"),
-                (10, "Vendeur : _________________________   Date : ____/____/2026"),
-                (10, "Acheteur : _________________________   Date : ____/____/2026"),
+                (12, "6. ASSURANCES"),
+                (10, "Assurance Coque & Machines : Club MMI — police YT-2026-0091"),
+                (10, "Valeur assuree : 155 000 000 USD — franchise : 500 000 USD"),
+                (10, "P&I : UK P&I Club — responsabilite civile 1 Md USD"),
+                (10, "Transfert des polices a l'Acheteur a la date de livraison"),
+                (11, ""),
+                (12, "7. EQUIPEMENTS & ELECTRONIQUE"),
+                (10, "Navigation : ECDIS, AIS classe A, VSAT Starlink maritime"),
+                (10, "Stabilisateurs : Quantum Zero Speed  |  Helicopter pad certifie"),
+                (10, "Interieurs : 10 suites, spa, cinema, beach club, cuisine professionnelle"),
+                (10, "Autonomie : 4 200 nm a 12 noeuds  |  Carburant : 280 000 L"),
+                (11, ""),
+                (10, "— page 3 / 4 —"),
+            ],
+            [  # p.4 — livraison & signatures
+                (14, "MV AURORA PACIFICA — Livraison et signatures"),
+                (11, ""),
+                (12, "8. LIVRAISON"),
+                (10, "Port de livraison : Port Hercule, Monaco"),
+                (10, "Date prevue : 15 septembre 2026 — tolerance +/- 15 jours"),
+                (10, "Essais en mer : 48 h minimum — acheteur ou representant present"),
+                (11, ""),
+                (12, "9. DROIT APPLICABLE ET ARBITRAGE"),
+                (10, "Contrat regi par le droit anglais (English Law)"),
+                (10, "Arbitrage LMAA — London Maritime Arbitrators Association"),
+                (11, ""),
+                (12, "10. SIGNATURES"),
+                (10, "Vendeur : ______________________________  Date : ___________"),
+                (10, "Acheteur : _____________________________  Date : ___________"),
+                (10, "Courtier : _____________________________  Date : ___________"),
                 (11, ""),
                 (10, "DOCUMENT FICTIF — DEMO — SANS VALEUR JURIDIQUE"),
-                (10, "Page 3 / 3"),
+                (10, "— page 4 / 4 —"),
             ],
         ],
     ),
     (
-        "contrat_winnebago.pdf",
+        "contrat_voiture_luxe.pdf",  # 3 pages
         [
-            [
-                (18, "CONTRAT DE VENTE — VR / MOTORISE"),
-                (14, "Winnebago Adventurer 35F — 2024"),
-                (11, "Longueur : 36 pi  |  Classe A diesel  |  VIN : 1GB8G4FL8RU123456 (fictif)"),
-                (11, "Kilometrage : 18 400 km  |  Couchages : 6  |  Lave-vaisselle, solarium"),
+            [  # p.1 — identification & parties
+                (18, "CONTRAT DE VENTE — VEHICULE DE LUXE"),
+                (14, "Lamborghini Huracan EVO Spyder — 2025"),
+                (11, "Couleur : Verde Mantis Metallic  |  VIN : ZHWUC1ZD8SLA99102 (fictif)"),
+                (11, "Ref. : PMM-2026-4471  |  Date : 10 janvier 2026"),
                 (11, ""),
-                (12, "PARTIES"),
-                (10, "Vendeur : VR Prestige Quebec Inc., 2500 boul. des Laurentides, Laval QC"),
+                (12, "1. PARTIES"),
+                (10, "Vendeur : Prestige Motors Montreal Inc."),
+                (10, "  1000, rue Sherbrooke Ouest, Montreal QC H3A 3G4"),
+                (10, "  Concessionnaire agree Lamborghini Canada — permis SAAQ 78-3392"),
                 (10, "Acheteur : M. Jean Tremblay — Fiche client 123456"),
-                (10, "Concessionnaire agree Winnebago — no permis 77219-QC"),
+                (10, "  245, avenue des Pins Ouest, Montreal QC H2W 1R1"),
                 (11, ""),
-                (10, "Page 1 / 2 — suite aux conditions financieres"),
+                (12, "2. DESCRIPTION DU VEHICULE"),
+                (10, "Marque : Lamborghini  |  Modele : Huracan EVO RWD Spyder  |  Annee : 2025"),
+                (10, "Moteur : V10 5,2 L atmospherique — 610 CV — boite LDF 7 rapports"),
+                (10, "Couleur : Verde Mantis Metallic (LB6090)  |  Interieur : Nero Ade / Verde"),
+                (11, ""),
+                (10, "— page 1 / 3 —"),
             ],
-            [
-                (12, "CONDITIONS FINANCIERES"),
+            [  # p.2 — conditions financieres & options
+                (14, "Lamborghini Huracan EVO — Conditions financieres"),
                 (11, ""),
-                (10, "Prix de vente : 289 900 CAD (deux cent quatre-vingt-neuf mille neuf cents)"),
-                (10, "Acompte a la signature : 35 000 CAD"),
-                (10, "Financement : 254 900 CAD sur 84 mois — taux 6,4 % / an"),
-                (10, "Garantie structure : 5 ans  |  Groupe motopropulseur : 3 ans / 60 000 km"),
-                (10, "Assurance VR tous risques 12 mois  |  Immatriculation et plaques incluses"),
+                (12, "3. PRIX ET MODALITES DE PAIEMENT"),
+                (10, "Prix de vente : 348 000 CAD (trois cent quarante-huit mille)"),
+                (10, "TPS (5 %) : 17 400 CAD  |  TVQ (9,975 %) : 34 716 CAD"),
+                (10, "Total taxes incluses : 400 116 CAD"),
                 (11, ""),
-                (12, "SIGNATURES"),
-                (10, "Vendeur : _________________________   Date : ____/____/2026"),
-                (10, "Acheteur : _________________________   Date : ____/____/2026"),
+                (10, "Modalites :"),
+                (10, "  - Acompte a la commande : 50 000 CAD — cheque certifie"),
+                (10, "  - Financement : 298 000 CAD sur 60 mois — taux 5,9 % / an"),
+                (10, "  - Mensualite estimee : 5 748 CAD / mois taxes incluses"),
+                (10, "  - Organisme financier : Banque Nationale — dossier BN-2026-88321"),
+                (11, ""),
+                (12, "4. OPTIONS ET ACCESSOIRES INCLUS"),
+                (10, "  - Pack Visibilite : camera 360, capteurs stationnement"),
+                (10, "  - Pack Carbon : capot, diffuseur, prises d'air fibre de carbone"),
+                (10, "  - Audio Bang & Olufsen Premium — 12 haut-parleurs"),
+                (10, "  - Plaques Quebec — livraison et mise en circulation incluses"),
+                (11, ""),
+                (10, "— page 2 / 3 —"),
+            ],
+            [  # p.3 — garanties & signatures
+                (14, "Lamborghini Huracan EVO — Garanties et signatures"),
+                (11, ""),
+                (12, "5. GARANTIES"),
+                (10, "Garantie constructeur : 3 ans / 50 000 km — pieces et main d'oeuvre"),
+                (10, "Extension disponible : +2 ans / +25 000 km — 8 900 CAD"),
+                (10, "Antiperforation carrosserie : 12 ans"),
+                (10, "Peinture : 3 ans contre defauts de fabrication"),
+                (11, ""),
+                (12, "6. ASSURANCES ET SERVICES"),
+                (10, "Assurance tous risques 12 mois : Intact Prestige Auto"),
+                (10, "  Valeur convenue : 348 000 CAD — franchise collision : 5 000 CAD"),
+                (10, "Assistance routiere 24/7 incluse pendant la garantie"),
+                (10, "1re revision Lamborghini Approved offerte"),
+                (11, ""),
+                (12, "7. SIGNATURES"),
+                (10, "Vendeur : ______________________________  Date : ___________"),
+                (10, "Acheteur : _____________________________  Date : ___________"),
                 (11, ""),
                 (10, "DOCUMENT FICTIF — DEMO — SANS VALEUR JURIDIQUE"),
-                (10, "Page 2 / 2"),
+                (10, "— page 3 / 3 —"),
             ],
         ],
     ),
     (
-        "contrat_jetski.pdf",
+        "contrat_jetski.pdf",  # 2 pages
         [
-            (18, "CONTRAT DE LOCATION SAISONNIERE — MOTO MARINE"),
-            (14, "Sea-Doo GTX Limited 325 — 2024"),
-            (11, "Moteur : Rotax 1630 ACE  |  Puissance : 325 HP  |  3 places"),
-            (11, ""),
-            (12, "PARTIES"),
-            (10, "Proprietaire : Nautique Laurentides Ltee, Magog QC"),
-            (10, "Locataire : M. Jean Tremblay — Permis bateau valide requis"),
-            (11, ""),
-            (12, "CONDITIONS"),
-            (10, "Periode : 1er juin 2026 au 15 octobre 2026 — Lac Memphremagog"),
-            (10, "Tarif saison : 8 900 CAD (huit mille neuf cents) — essence non incluse"),
-            (10, "Caution : 2 500 CAD  |  Gilet de sauvetage et casque fournis"),
-            (10, "Zone autorisee : eaux du Quebec — interdit mer ouverte"),
-            (10, "Assurance responsabilite : 2 M CAD — franchise 1 000 CAD"),
-            (11, ""),
-            (10, "DOCUMENT FICTIF — DEMO — SANS VALEUR JURIDIQUE"),
-        ],
-    ),
-    (
-        "contrat_skidoo.pdf",
-        [
-            [
-                (18, "CONTRAT DE LOCATION HIVERNALE — MOTO NEIGE"),
-                (14, "Ski-Doo Expedition SE 900 ACE — 2025"),
-                (11, "Cylindree : 900  |  Chenilles 154 x 20  |  Demarrage electrique"),
-                (11, "No serie : 2BPSGAM00NC123456 (fictif)  |  Heures moteur : 42 h"),
+            [  # p.1 — identification, parties & description
+                (18, "CONTRAT DE LOCATION SAISONNIERE — MOTO MARINE"),
+                (14, "Sea-Doo GTX Limited 325 — 2024"),
+                (11, "Moteur : Rotax 1630 ACE  |  Puissance : 325 HP  |  3 places"),
+                (11, "Ref. : NLL-2026-0391  |  Date : 1er juin 2026"),
                 (11, ""),
-                (12, "PARTIES"),
-                (10, "Loueur : Motoneige Estrie Inc., 4500 boul. Bourque, Sherbrooke QC J1N 1A1"),
+                (12, "1. PARTIES"),
+                (10, "Proprietaire : Nautique Laurentides Ltee"),
+                (10, "  155, chemin des Bateliers, Magog QC J1X 3W2"),
+                (10, "  Permis exploitation embarcation no. QC-NAU-2026-0088"),
                 (10, "Locataire : M. Jean Tremblay — Fiche client 123456"),
-                (10, "Permis conduire valide + carte motoneige FCMQ recommandee"),
+                (10, "  Permis de conduire embarcation de plaisance valide exige"),
                 (11, ""),
-                (10, "Page 1 / 5"),
+                (12, "2. DESCRIPTION DE L'EMBARCATION"),
+                (10, "Marque : Sea-Doo  |  Modele : GTX Limited 325  |  Annee : 2024"),
+                (10, "Immatriculation : QC-4821-HT (fictif)  |  Couleur : bleu / noir"),
+                (10, "Equipements : GPS integre, systeme audio, plateforme de baignade"),
+                (11, ""),
+                (10, "— page 1 / 2 —"),
             ],
-            [
-                (12, "PERIODE & TARIFICATION"),
+            [  # p.2 — conditions, securite & signatures
+                (14, "Sea-Doo GTX Limited 325 — Conditions et signatures"),
                 (11, ""),
-                (10, "Saison : 15 decembre 2026 au 31 mars 2027 — sentiers Quebec autorises"),
-                (10, "Forfait 8 semaines : 6 200 CAD — kilometrage illimite sentiers balises"),
-                (10, "Prolongation : 750 CAD / semaine supplementaire (avis 48 h)"),
-                (10, "Caution remboursable : 1 800 CAD — prelevement sur carte au depart"),
-                (10, "Carburant : plein a plein (essence 91 octane)"),
+                (12, "3. CONDITIONS DE LOCATION"),
+                (10, "Periode : 1er juin 2026 au 15 octobre 2026 — Lac Memphremagog"),
+                (10, "Tarif saison : 8 900 CAD (huit mille neuf cents) — essence non incluse"),
+                (10, "Caution remboursable : 2 500 CAD — retenue en cas de dommage"),
                 (11, ""),
-                (12, "EQUIPEMENT INCLUS"),
-                (10, "Casque modular, combinaison -20 C, sac secours, trousse outils"),
-                (10, "Piste GPS BRP Link en location : 15 CAD / jour (option)"),
+                (12, "4. SECURITE ET OBLIGATIONS"),
+                (10, "Equipements fournis : gilet homologue, casque, sifflet, extincteur"),
+                (10, "Zone autorisee : eaux navigables du Quebec — mer ouverte interdite"),
+                (10, "Vitesse pres des rives : 10 km/h max dans zones reglementees"),
+                (10, "Interdictions : alcool, sous-location, tiers non autorises"),
                 (11, ""),
-                (10, "Page 2 / 5"),
-            ],
-            [
-                (12, "ASSURANCE & RESPONSABILITE"),
+                (12, "5. ASSURANCE"),
+                (10, "Responsabilite civile : 2 000 000 CAD — franchise 1 000 CAD"),
+                (10, "Dommages corps : franchise Locataire 2 500 CAD"),
                 (11, ""),
-                (10, "Responsabilite civile : 1 000 000 CAD — franchise 500 CAD par sinistre"),
-                (10, "Collision / vol : franchise 1 000 CAD — vehicule remplacement non garanti"),
-                (10, "Assistance routiere sentiers : 24/7 — remorquage 100 km inclus"),
-                (10, "Locataire responsable des amendes et infractions FCMQ / MELCC"),
-                (11, ""),
-                (12, "SECURITE"),
-                (10, "Port du casque obligatoire  |  Vitesse max 70 km/h sur sentiers"),
-                (10, "Zero alcool / drogue au volant — resiliation immediate si positif"),
-                (10, "Declaration sinistre sous 24 h avec photos et constat"),
-                (11, ""),
-                (10, "Page 3 / 5"),
-            ],
-            [
-                (12, "REGLES D UTILISATION"),
-                (11, ""),
-                (10, "Autorise : sentiers balises FCMQ, clubs partenaires Estrie / Chaudiere-Appalaches"),
-                (10, "Interdit : hors-piste non balise, lac gele sans autorisation municipale"),
-                (10, "Interdit : transport passager non declare, course, modification moteur"),
-                (10, "Retour : propre, niveaux verifies, batterie chargee, photos etat general"),
-                (11, ""),
-                (12, "ENTRETIEN & DOMMAGES"),
-                (10, "Usure normale incluse — chenilles cassees hors negligence : 350 CAD"),
-                (10, "Dommages esthetiques > 500 CAD factures au locataire apres expertise"),
-                (10, "Vol sans cadenas fourni : franchise majoree a 2 500 CAD"),
-                (11, ""),
-                (10, "Page 4 / 5"),
-            ],
-            [
-                (12, "SIGNATURES"),
-                (11, ""),
-                (10, "Loueur : _________________________   Date : ____/____/2026"),
-                (10, "Locataire : _________________________   Date : ____/____/2026"),
+                (12, "6. SIGNATURES"),
+                (10, "Proprietaire : _________________________  Date : ___________"),
+                (10, "Locataire : ____________________________  Date : ___________"),
                 (11, ""),
                 (10, "DOCUMENT FICTIF — DEMO — SANS VALEUR JURIDIQUE"),
-                (10, "Page 5 / 5"),
+                (10, "— page 2 / 2 —"),
+            ],
+        ],
+    ),
+    (
+        "contrat_skidoo.pdf",  # 3 pages
+        [
+            [  # p.1 — identification & parties
+                (18, "CONTRAT DE LOCATION HIVERNALE — MOTO NEIGE"),
+                (14, "Ski-Doo Expedition SE 900 ACE Turbo R — 2025"),
+                (11, "Cylindree : 900 cc  |  Chenilles 154 x 20  |  Demarrage electrique"),
+                (11, "Ref. : MEE-2026-1215  |  Date : 15 decembre 2026"),
+                (11, ""),
+                (12, "1. PARTIES"),
+                (10, "Loueur : Motoneige Estrie Inc."),
+                (10, "  2200, rue King Ouest, Sherbrooke QC J1J 2G2"),
+                (10, "  Membre FCMQ — Federation des clubs de motoneigistes du Quebec"),
+                (10, "Locataire : M. Jean Tremblay — Fiche client 123456"),
+                (10, "  Certification CFMOTO recommandee — permis de conduire valide"),
+                (11, ""),
+                (12, "2. DESCRIPTION DE LA MOTONEIGE"),
+                (10, "Marque : Ski-Doo (BRP)  |  Modele : Expedition SE 900 ACE Turbo R"),
+                (10, "Annee : 2025  |  Couleur : Oxygen White / Yellow"),
+                (10, "No. serie : 2BPSCFCA8PV001247 (fictif)"),
+                (10, "Carburant : 40 L  |  Conso. estimee : ~15 L / 100 km"),
+                (11, ""),
+                (10, "— page 1 / 3 —"),
+            ],
+            [  # p.2 — conditions & obligations
+                (14, "Ski-Doo Expedition SE 900 ACE — Conditions"),
+                (11, ""),
+                (12, "3. CONDITIONS DE LOCATION"),
+                (10, "Saison : 15 decembre 2026 au 31 mars 2027"),
+                (10, "Sentiers autorises : reseau balisé FCMQ — Quebec seulement"),
+                (10, "Forfait 8 semaines : 6 200 CAD — kilometrage illimite sentiers balises"),
+                (10, "Caution remboursable : 1 800 CAD — retenue en cas de dommage ou perte"),
+                (11, ""),
+                (12, "4. EQUIPEMENTS INCLUS"),
+                (10, "Casque BRP Seirus taille L/XL  |  Combinaison thermique taille L"),
+                (10, "Coffre de rangement 50 L  |  Chaine antivol  |  Kit premiers secours"),
+                (10, "Carte des sentiers FCMQ 2026-2027"),
+                (11, ""),
+                (12, "5. OBLIGATIONS DU LOCATAIRE"),
+                (10, "Conduire uniquement sur sentiers balises et autorises FCMQ"),
+                (10, "Hors-piste non balise : strictement interdit"),
+                (10, "Lac gele : autorise uniquement sur parcours municipal balisé"),
+                (10, "Carburant essence 87 octanes — a la charge du Locataire"),
+                (11, ""),
+                (10, "— page 2 / 3 —"),
+            ],
+            [  # p.3 — assurances & signatures
+                (14, "Ski-Doo Expedition SE 900 ACE — Assurances et signatures"),
+                (11, ""),
+                (12, "6. ASSURANCES"),
+                (10, "Responsabilite civile : 1 000 000 CAD — incluse"),
+                (10, "Vol : franchise Locataire 500 CAD"),
+                (10, "Dommages collision : franchise Locataire 1 200 CAD"),
+                (10, "Exclusions : hors-piste, alcool, modifications non autorisees"),
+                (11, ""),
+                (12, "7. ENTRETIEN ET RETOUR"),
+                (10, "Retour prevu : 31 mars 2027 — depot Sherbrooke"),
+                (10, "Etat requis : propre, reservoir plein, aucun dommage non declare"),
+                (10, "Frais de nettoyage si retour sale : 150 CAD forfait"),
+                (11, ""),
+                (12, "8. SIGNATURES"),
+                (10, "Loueur : _______________________________  Date : ___________"),
+                (10, "Locataire : ____________________________  Date : ___________"),
+                (11, ""),
+                (10, "DOCUMENT FICTIF — DEMO — SANS VALEUR JURIDIQUE"),
+                (10, "— page 3 / 3 —"),
             ],
         ],
     ),
@@ -203,12 +305,6 @@ CONTRACTS: list[tuple[str, list | list[list[tuple[int, str]]]]] = [
 
 def _pdf_escape(text: str) -> str:
     return text.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
-
-
-def _normalize_pages(content: list) -> list[list[tuple[int, str]]]:
-    if content and isinstance(content[0], list):
-        return content
-    return [content]
 
 
 def _content_stream(rows: list[tuple[int, str]]) -> bytes:
@@ -228,55 +324,64 @@ def _content_stream(rows: list[tuple[int, str]]) -> bytes:
     return b"\n".join(parts)
 
 
-def write_contract_pdf(path: Path, content: list) -> None:
-    pages = _normalize_pages(content)
-    streams = [_content_stream(rows) for rows in pages]
-    n_pages = len(pages)
+def write_contract_pdf(path: Path, pages: list[list[tuple[int, str]]]) -> None:
+    """Write a multi-page PDF.
 
-    kid_refs: list[str] = []
-    page_content: list[tuple[int, int, bytes]] = []
-    next_id = 3
-    for stream in streams:
-        page_id = next_id
-        content_id = next_id + 1
-        next_id += 2
-        kid_refs.append(f"{page_id} 0 R")
-        page_content.append((page_id, content_id, stream))
+    Object numbering:
+      1  Catalog
+      2  Pages (root)
+      3  Font /F1
+      for each page i (0-based):
+        4 + 2*i        Page object
+        4 + 2*i + 1    Content stream
+    """
+    n = len(pages)
+    streams = [_content_stream(p) for p in pages]
 
-    font_id = next_id
-    size = font_id
+    font_id = 3
+    page_ids = [4 + 2 * i for i in range(n)]
+    stream_ids = [4 + 2 * i + 1 for i in range(n)]
+    total = 3 + 2 * n  # highest object id
 
-    objects: list[bytes] = [
-        b"<< /Type /Catalog /Pages 2 0 R >>",
-        f"<< /Type /Pages /Kids [{' '.join(kid_refs)}] /Count {n_pages} >>".encode(),
-    ]
-    for page_id, content_id, stream in page_content:
-        objects.append(
+    kids = " ".join(f"{pid} 0 R" for pid in page_ids)
+
+    raw: dict[int, bytes] = {
+        1: b"<< /Type /Catalog /Pages 2 0 R >>",
+        2: f"<< /Type /Pages /Kids [{kids}] /Count {n} >>".encode(),
+        3: b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+    }
+    for i in range(n):
+        sid = stream_ids[i]
+        raw[page_ids[i]] = (
             f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] "
-            f"/Contents {content_id} 0 R /Resources << /Font << /F1 {font_id} 0 R >> >> >>".encode()
+            f"/Contents {sid} 0 R "
+            f"/Resources << /Font << /F1 {font_id} 0 R >> >> >>".encode()
         )
-        objects.append(f"<< /Length {len(stream)} >>\nstream\n".encode() + stream + b"\nendstream")
-    objects.append(b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>")
+        raw[stream_ids[i]] = (
+            f"<< /Length {len(streams[i])} >>\nstream\n".encode()
+            + streams[i]
+            + b"\nendstream"
+        )
 
-    out = [b"%PDF-1.4\n"]
-    offsets = [0]
-    for i, body in enumerate(objects, start=1):
+    out: list[bytes] = [b"%PDF-1.4\n"]
+    offsets: list[int] = []
+    for obj_id in range(1, total + 1):
         offsets.append(sum(len(x) for x in out))
-        out.append(f"{i} 0 obj\n".encode() + body + b"\nendobj\n")
+        out.append(f"{obj_id} 0 obj\n".encode() + raw[obj_id] + b"\nendobj\n")
+
     xref_pos = sum(len(x) for x in out)
-    out.append(f"xref\n0 {size + 1}\n0000000000 65535 f \n".encode())
-    for off in offsets[1:]:
+    out.append(f"xref\n0 {total + 1}\n0000000000 65535 f \n".encode())
+    for off in offsets:
         out.append(f"{off:010d} 00000 n \n".encode())
     out.append(
         b"trailer\n<< /Size "
-        + str(size).encode()
+        + str(total + 1).encode()
         + b" /Root 1 0 R >>\nstartxref\n"
         + str(xref_pos).encode()
         + b"\n%%EOF\n"
     )
     path.write_bytes(b"".join(out))
-    label = f"{n_pages} p." if n_pages > 1 else "1 p."
-    print(f"OK PDF — {path.name} ({label}, {path.stat().st_size:,} o)")
+    print(f"OK PDF — {path.name} ({n} p., {path.stat().st_size:,} o)")
 
 
 def _fetch_url(url: str) -> bytes:
@@ -285,7 +390,6 @@ def _fetch_url(url: str) -> bytes:
         data = resp.read()
     if len(data) < 1500:
         raise ValueError("réponse trop petite")
-    # Rejeter GIF si on veut du JPEG dans <img> — cataas /cat sans /gif renvoie souvent JPEG
     if data[:6] == b"GIF89a" or data[:3] == b"GIF":
         raise ValueError("image GIF — réessayer autre URL")
     return data
@@ -313,15 +417,9 @@ def download_cats() -> None:
 
 def main() -> None:
     SAMPLES.mkdir(parents=True, exist_ok=True)
-    for old in SAMPLES.glob("contrat_yacht*.pdf"):
-        old.unlink()
-    for old in SAMPLES.glob("contrat_voiture*.pdf"):
-        old.unlink()
-    for old in SAMPLES.glob("photo_chat.jpg"):
-        old.unlink()
     download_cats()
-    for filename, rows in CONTRACTS:
-        write_contract_pdf(SAMPLES / filename, rows)
+    for filename, pages in CONTRACTS:
+        write_contract_pdf(SAMPLES / filename, pages)
     print("Terminé —", SAMPLES)
 
 

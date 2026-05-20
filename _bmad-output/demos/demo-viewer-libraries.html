@@ -21,10 +21,10 @@
 </head>
 <body class="min-h-full bg-dj-light text-gray-800 font-sans antialiased">
   <header class="bg-dj-dark text-white px-5 py-2.5 flex flex-wrap items-center justify-between gap-2">
-    <span class="font-bold tracking-wide">Desjardins — Démo B</span>
-    <div class="flex items-center gap-2">
-      <span class="bg-dj text-xs font-bold px-2 py-0.5 rounded ring-1 ring-white/30">PDF.js</span>
-      <a href="demo-viewer-native.html" class="text-xs text-emerald-200 underline hover:text-white">→ Démo A (natif)</a>
+    <a href="index.html" class="font-bold tracking-wide text-white hover:text-emerald-100">← Index</a>
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="bg-dj text-xs font-bold px-2 py-0.5 rounded ring-1 ring-white/30">Démo B · PDF.js</span>
+      <a href="demo-viewer-native.html" class="text-xs text-emerald-200 underline hover:text-white">Démo A (natif)</a>
     </div>
   </header>
 
@@ -47,9 +47,25 @@
 
   <main class="p-5 pb-8 max-w-6xl mx-auto">
     <div class="bg-white border border-dj-border rounded-t-lg px-3 py-3">
-      <div class="flex items-center justify-between gap-2 mb-2">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
         <h3 class="text-sm font-semibold text-dj-dark">Documents</h3>
-        <span class="text-xs font-bold text-dj shrink-0" x-text="(selected + 1) + ' / ' + docs.length"></span>
+        <div class="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            @click="docPrev()"
+            :disabled="selected <= 0"
+            class="bg-dj text-white text-xs px-2.5 py-1 rounded disabled:opacity-40"
+            title="Document précédent"
+          >← Doc.</button>
+          <span class="text-xs font-bold text-dj tabular-nums" x-text="(selected + 1) + ' / ' + docs.length"></span>
+          <button
+            type="button"
+            @click="docNext()"
+            :disabled="selected >= docs.length - 1"
+            class="bg-dj text-white text-xs px-2.5 py-1 rounded disabled:opacity-40"
+            title="Document suivant"
+          >Doc. →</button>
+        </div>
       </div>
       <div class="flex flex-wrap gap-2" role="tablist" aria-label="Documents du dossier">
         <template x-for="(doc, i) in docs" :key="doc.id">
@@ -79,6 +95,15 @@
         <span x-text="currentLabel"></span>
         <span class="text-emerald-200 shrink-0" x-text="viewerMode"></span>
       </div>
+      <p
+        x-show="fileProtocolWarning"
+        x-cloak
+        class="text-xs bg-red-900 text-red-100 px-3 py-2 border-b border-red-700"
+      >
+        PDF.js ne charge pas les fichiers en <code>file://</code> — depuis <code>demos/</code> :
+        <code class="bg-red-950 px-1 rounded">python3 serve-demos.py</code>
+        puis <code class="bg-red-950 px-1 rounded">http://localhost:8765/demo-viewer-libraries.html</code>
+      </p>
 
       <div
         x-show="isPdf && !loading && !error"
@@ -89,13 +114,19 @@
         <button type="button" @click="pdfNext()" :disabled="!pdfReady || pdfUiPage >= pdfUiNumPages" class="bg-dj text-white text-xs px-2.5 py-1 rounded disabled:opacity-40">Page +</button>
         <button type="button" @click="pdfZoom(-0.2)" class="bg-dj text-white text-xs px-2.5 py-1 rounded">Zoom −</button>
         <button type="button" @click="pdfZoom(0.2)" class="bg-dj text-white text-xs px-2.5 py-1 rounded">Zoom +</button>
+        <button type="button" @click="pdfFitWidth()" :disabled="!pdfReady" class="bg-white border border-dj text-dj-dark text-xs px-2.5 py-1 rounded disabled:opacity-40 hover:bg-dj-light">Ajuster largeur</button>
+        <button type="button" @click="pdfFitHeight()" :disabled="!pdfReady" class="bg-white border border-dj text-dj-dark text-xs px-2.5 py-1 rounded disabled:opacity-40 hover:bg-dj-light">Ajuster hauteur</button>
         <span class="text-xs text-dj-dark self-center ml-1" x-text="pdfPageInfo"></span>
       </div>
 
       <div class="min-h-[400px] flex items-center justify-center p-4 bg-neutral-900 relative">
         <p x-show="loading" class="text-gray-300 text-sm">Chargement…</p>
         <p x-show="error" x-cloak class="text-red-300 text-sm text-center max-w-md px-4" x-text="error"></p>
-        <div x-ref="viewerHost" class="w-full flex justify-center overflow-auto max-h-[400px]" x-show="!loading && !error"></div>
+        <div
+          x-ref="viewerHost"
+          class="w-full flex justify-center items-start overflow-auto max-h-[min(70vh,560px)] min-h-[280px] py-2"
+          x-show="!loading && !error"
+        ></div>
       </div>
     </div>
 
@@ -119,6 +150,7 @@
         selected: 0,
         loading: false,
         error: null,
+        fileProtocolWarning: false,
         pdfReady: false,
         pdfUiPage: 1,
         pdfUiNumPages: 0,
@@ -152,13 +184,26 @@
           this.pdfUiNumPages = 0;
         },
 
+        assetUrl(relative) {
+          return new URL(relative, window.location.href).href;
+        },
+
         init() {
+          this.fileProtocolWarning = window.location.protocol === "file:";
           this.$nextTick(() => this.loadCurrent());
         },
 
         select(i) {
           this.selected = i;
           this.loadCurrent();
+        },
+
+        docPrev() {
+          if (this.selected > 0) this.select(this.selected - 1);
+        },
+
+        docNext() {
+          if (this.selected < this.docs.length - 1) this.select(this.selected + 1);
         },
 
         onKey(e) {
@@ -196,11 +241,53 @@
         },
 
         async renderPdf(url) {
-          pdfEngine.doc = await pdfjsLib.getDocument({ url }).promise;
+          if (window.location.protocol === "file:") {
+            throw new Error(
+              "PDF.js bloque file:// — lancez python3 serve-demos.py et ouvrez http://localhost:8765/demo-viewer-libraries.html"
+            );
+          }
+          const absolute = this.assetUrl(url);
+          const res = await fetch(absolute);
+          if (!res.ok) {
+            throw new Error(`Impossible de charger le PDF (HTTP ${res.status}) : ${absolute}`);
+          }
+          const data = await res.arrayBuffer();
+          pdfEngine.doc = await pdfjsLib.getDocument({ data }).promise;
           pdfEngine.page = 1;
           this.pdfReady = true;
           this.pdfUiPage = 1;
           this.pdfUiNumPages = pdfEngine.doc.numPages;
+          await this.$nextTick();
+          await this.pdfFitWidth();
+        },
+
+        hostSize() {
+          const host = this.$refs.viewerHost;
+          return {
+            w: host?.clientWidth || 640,
+            h: host?.clientHeight || 400,
+          };
+        },
+
+        async pageAtScale1() {
+          const page = await pdfEngine.doc.getPage(pdfEngine.page);
+          return page.getViewport({ scale: 1 });
+        },
+
+        async pdfFitWidth() {
+          if (!pdfEngine.doc) return;
+          const base = await this.pageAtScale1();
+          const { w } = this.hostSize();
+          pdfEngine.scale = Math.min(2.5, Math.max(0.5, (w - 48) / base.width));
+          this.pdfUiScalePct = Math.round(pdfEngine.scale * 100);
+          await this.paintPdf();
+        },
+
+        async pdfFitHeight() {
+          if (!pdfEngine.doc) return;
+          const base = await this.pageAtScale1();
+          const { h } = this.hostSize();
+          pdfEngine.scale = Math.min(2.5, Math.max(0.5, (h - 24) / base.height));
           this.pdfUiScalePct = Math.round(pdfEngine.scale * 100);
           await this.paintPdf();
         },
@@ -210,13 +297,23 @@
           if (!doc) return;
           const page = await doc.getPage(pdfEngine.page);
           const vp = page.getViewport({ scale: pdfEngine.scale });
+          const dpr = window.devicePixelRatio || 1;
           this.clearHost();
+          const wrap = document.createElement("div");
+          wrap.className = "inline-block leading-none shrink-0";
           const canvas = document.createElement("canvas");
-          canvas.className = "shadow-lg max-w-full";
-          canvas.width = vp.width;
-          canvas.height = vp.height;
-          this.$refs.viewerHost.appendChild(canvas);
-          await page.render({ canvasContext: canvas.getContext("2d"), viewport: vp }).promise;
+          canvas.className = "shadow-lg bg-white block";
+          const ctx = canvas.getContext("2d");
+          const w = Math.floor(vp.width);
+          const h = Math.floor(vp.height);
+          canvas.width = Math.floor(w * dpr);
+          canvas.height = Math.floor(h * dpr);
+          canvas.style.width = `${w}px`;
+          canvas.style.height = `${h}px`;
+          wrap.appendChild(canvas);
+          this.$refs.viewerHost.appendChild(wrap);
+          const transform = dpr !== 1 ? [dpr, 0, 0, dpr, 0, 0] : null;
+          await page.render({ canvasContext: ctx, viewport: vp, transform }).promise;
         },
 
         async pdfPrev() {
@@ -244,7 +341,7 @@
         async renderImage(doc) {
           this.clearHost();
           const img = document.createElement("img");
-          img.src = doc.url;
+          img.src = this.assetUrl(doc.url);
           img.alt = "Chat mignon";
           img.className = "max-w-full max-h-[400px] object-contain rounded-lg shadow-lg ring-2 ring-dj/50";
           this.$refs.viewerHost.appendChild(img);
