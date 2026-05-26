@@ -3,6 +3,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc =
   "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
 const pdfEngine = { doc: null, page: 1, scale: 1.15 };
+const nativeViewerEnabled = document.body?.dataset?.nativeViewer === "true";
 
 function layoutViewer() {
   return {
@@ -35,6 +36,7 @@ function layoutViewer() {
     get viewerMode() {
       const d = this.current;
       if (!d) return "";
+      if (nativeViewerEnabled) return "Viewer natif navigateur";
       return d.render === "pdf" ? "PDF.js / canvas" : "img";
     },
     thumbSrc(doc) {
@@ -154,19 +156,39 @@ function layoutViewer() {
       this.resetPdf();
       this.clearHost();
       try {
-        if (doc.render === "pdf") await this.renderPdf(doc.url);
+        if (doc.render === "pdf") {
+          if (nativeViewerEnabled) await this.renderPdfNative(doc);
+          else await this.renderPdf(doc.url);
+        }
         else await this.renderImage(doc);
       } catch (err) {
         console.error(err);
         this.error = err.message || String(err);
       } finally {
         this.loading = false;
-        if (doc.render === "pdf" && pdfEngine.doc && !this.error) {
+        if (!nativeViewerEnabled && doc.render === "pdf" && pdfEngine.doc && !this.error) {
           await this.$nextTick();
           await this.waitForViewerLayout();
           await this.pdfFitWidth();
         }
       }
+    },
+
+    async renderPdfNative(doc) {
+      this.clearHost();
+      const src = this.assetUrl(doc.url);
+      const frame = document.createElement("iframe");
+      frame.src = src;
+      frame.title = doc.pillLabel || doc.name || "Document";
+      frame.className = "w-full h-full bg-white";
+      frame.setAttribute("loading", "eager");
+      this.$refs.viewerHost.appendChild(frame);
+    },
+
+    openCurrentInNewTab() {
+      const doc = this.current;
+      if (!doc) return;
+      window.open(this.assetUrl(doc.url), "_blank", "noopener,noreferrer");
     },
 
     async renderPdf(url) {
@@ -263,11 +285,14 @@ function layoutViewer() {
 
     async renderImage(doc) {
       this.clearHost();
+      const wrap = document.createElement("div");
+      wrap.className = "w-full h-full flex items-center justify-center p-2";
       const img = document.createElement("img");
       img.src = this.assetUrl(doc.url);
       img.alt = doc.pillLabel || doc.name;
-      img.className = "max-w-full max-h-[min(65vh,480px)] object-contain rounded-lg shadow-lg ring-2 ring-dj/50";
-      this.$refs.viewerHost.appendChild(img);
+      img.className = "max-w-full max-h-full object-contain rounded-lg shadow-lg ring-2 ring-dj/50 block";
+      wrap.appendChild(img);
+      this.$refs.viewerHost.appendChild(wrap);
     },
   };
 }
